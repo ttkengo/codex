@@ -1835,7 +1835,10 @@ async fn auto_compact_allows_multiple_attempts_when_interleaved_with_other_turn_
     for user in [MULTI_AUTO_MSG, follow_up_user, final_user] {
         codex
             .submit(Op::UserInput {
-                items: vec![UserInput::Text { text: user.into() }],
+                items: vec![UserInput::Text {
+                    text: user.into(),
+                    text_elements: Vec::new(),
+                }],
                 final_output_json_schema: None,
             })
             .await
@@ -2075,7 +2078,10 @@ async fn auto_compact_counts_encrypted_reasoning_before_last_user() {
     {
         codex
             .submit(Op::UserInput {
-                items: vec![UserInput::Text { text: user.into() }],
+                items: vec![UserInput::Text {
+                    text: user.into(),
+                    text_elements: Vec::new(),
+                }],
                 final_output_json_schema: None,
             })
             .await

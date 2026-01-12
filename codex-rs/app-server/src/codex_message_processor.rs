@@ -3093,7 +3093,13 @@ impl CodexMessageProcessor {
         let mapped_items: Vec<CoreInputItem> = items
             .into_iter()
             .map(|item| match item {
-                WireInputItem::Text { text } => CoreInputItem::Text { text },
+                WireInputItem::Text {
+                    text,
+                    text_elements,
+                } => CoreInputItem::Text {
+                    text,
+                    text_elements,
+                },
                 WireInputItem::Image { image_url } => CoreInputItem::Image { image_url },
                 WireInputItem::LocalImage { path } => CoreInputItem::LocalImage { path },
             })
@@ -3139,7 +3145,13 @@ impl CodexMessageProcessor {
         let mapped_items: Vec<CoreInputItem> = items
             .into_iter()
             .map(|item| match item {
-                WireInputItem::Text { text } => CoreInputItem::Text { text },
+                WireInputItem::Text {
+                    text,
+                    text_elements,
+                } => CoreInputItem::Text {
+                    text,
+                    text_elements,
+                },
                 WireInputItem::Image { image_url } => CoreInputItem::Image { image_url },
                 WireInputItem::LocalImage { path } => CoreInputItem::LocalImage { path },
             })

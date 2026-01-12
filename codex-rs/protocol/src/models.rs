@@ -63,9 +63,15 @@ pub enum ResponseInputItem {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
 #[serde(tag = "type", rename_all = "snake_case")]
 pub enum ContentItem {
-    InputText { text: String },
-    InputImage { image_url: String },
-    OutputText { text: String },
+    InputText {
+        text: String,
+    },
+    InputImage {
+        image_url: String,
+    },
+    OutputText {
+        text: String,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, JsonSchema, TS)]
@@ -336,6 +342,8 @@ fn local_image_error_placeholder(
             path.display(),
             error
         ),
+        // Placeholder text is synthesized; no UI element ranges to preserve.
+        text_elements: Vec::new(),
     }
 }
 
@@ -391,6 +399,8 @@ fn invalid_image_error_placeholder(
             path.display(),
             error
         ),
+        // Placeholder text is synthesized; no UI element ranges to preserve.
+        text_elements: Vec::new(),
     }
 }
 
@@ -401,6 +411,8 @@ fn unsupported_image_error_placeholder(path: &std::path::Path, mime: &str) -> Co
             path.display(),
             mime
         ),
+        // Placeholder text is synthesized; no UI element ranges to preserve.
+        text_elements: Vec::new(),
     }
 }
 
@@ -414,6 +426,8 @@ pub fn local_image_content_items_with_label_number(
             if let Some(label_number) = label_number {
                 items.push(ContentItem::InputText {
                     text: local_image_open_tag_text(label_number),
+                    // Tag markers are synthesized; no UI element ranges to preserve.
+                    text_elements: Vec::new(),
                 });
             }
             items.push(ContentItem::InputImage {
@@ -422,6 +436,8 @@ pub fn local_image_content_items_with_label_number(
             if label_number.is_some() {
                 items.push(ContentItem::InputText {
                     text: LOCAL_IMAGE_CLOSE_TAG.to_string(),
+                    // Tag markers are synthesized; no UI element ranges to preserve.
+                    text_elements: Vec::new(),
                 });
             }
             items
@@ -550,14 +566,24 @@ impl From<Vec<UserInput>> for ResponseInputItem {
             content: items
                 .into_iter()
                 .flat_map(|c| match c {
-                    UserInput::Text { text } => vec![ContentItem::InputText { text }],
+                    UserInput::Text {
+                        text,
+                        text_elements,
+                    } => vec![ContentItem::InputText {
+                        text,
+                        text_elements,
+                    }],
                     UserInput::Image { image_url } => vec![
                         ContentItem::InputText {
                             text: image_open_tag_text(),
+                            // Tag markers are synthesized; no UI element ranges to preserve.
+                            text_elements: Vec::new(),
                         },
                         ContentItem::InputImage { image_url },
                         ContentItem::InputText {
                             text: image_close_tag_text(),
+                            // Tag markers are synthesized; no UI element ranges to preserve.
+                            text_elements: Vec::new(),
                         },
                     ],
                     UserInput::LocalImage { path } => {
@@ -1076,10 +1102,12 @@ mod tests {
                 let expected = vec![
                     ContentItem::InputText {
                         text: image_open_tag_text(),
+                        text_elements: Vec::new(),
                     },
                     ContentItem::InputImage { image_url },
                     ContentItem::InputText {
                         text: image_close_tag_text(),
+                        text_elements: Vec::new(),
                     },
                 ];
                 assert_eq!(content, expected);
@@ -1103,7 +1131,7 @@ mod tests {
             ResponseInputItem::Message { content, .. } => {
                 assert_eq!(content.len(), 1);
                 match &content[0] {
-                    ContentItem::InputText { text } => {
+                    ContentItem::InputText { text, .. } => {
                         let display_path = missing_path.display().to_string();
                         assert!(
                             text.contains(&display_path),
@@ -1137,7 +1165,7 @@ mod tests {
             ResponseInputItem::Message { content, .. } => {
                 assert_eq!(content.len(), 1);
                 match &content[0] {
-                    ContentItem::InputText { text } => {
+                    ContentItem::InputText { text, .. } => {
                         assert!(
                             text.contains("unsupported MIME type `application/json`"),
                             "placeholder should mention unsupported MIME: {text}"
@@ -1178,7 +1206,7 @@ mod tests {
                     svg_path.display()
                 );
                 match &content[0] {
-                    ContentItem::InputText { text } => assert_eq!(text, &expected),
+                    ContentItem::InputText { text, .. } => assert_eq!(text, &expected),
                     other => panic!("expected placeholder text but found {other:?}"),
                 }
             }

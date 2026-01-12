@@ -88,6 +88,7 @@ use codex_protocol::ThreadId;
 use codex_protocol::account::PlanType;
 use codex_protocol::approvals::ElicitationRequestEvent;
 use codex_protocol::parse_command::ParsedCommand;
+use codex_protocol::user_input::TextElement;
 use codex_protocol::user_input::UserInput;
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
@@ -414,14 +415,17 @@ pub(crate) struct ActiveCellTranscriptKey {
 
 struct UserMessage {
     text: String,
-    image_paths: Vec<PathBuf>,
+    local_image_paths: Vec<PathBuf>,
+    text_elements: Vec<TextElement>,
 }
 
 impl From<String> for UserMessage {
     fn from(text: String) -> Self {
         Self {
             text,
-            image_paths: Vec::new(),
+            local_image_paths: Vec::new(),
+            // Plain text conversion has no UI element ranges.
+            text_elements: Vec::new(),
         }
     }
 }
@@ -430,16 +434,26 @@ impl From<&str> for UserMessage {
     fn from(text: &str) -> Self {
         Self {
             text: text.to_string(),
-            image_paths: Vec::new(),
+            local_image_paths: Vec::new(),
+            // Plain text conversion has no UI element ranges.
+            text_elements: Vec::new(),
         }
     }
 }
 
-fn create_initial_user_message(text: String, image_paths: Vec<PathBuf>) -> Option<UserMessage> {
-    if text.is_empty() && image_paths.is_empty() {
+fn create_initial_user_message(
+    text: String,
+    local_image_paths: Vec<PathBuf>,
+    text_elements: Vec<TextElement>,
+) -> Option<UserMessage> {
+    if text.is_empty() && local_image_paths.is_empty() {
         None
     } else {
-        Some(UserMessage { text, image_paths })
+        Some(UserMessage {
+            text,
+            local_image_paths,
+            text_elements,
+        })
     }
 }
 
@@ -879,7 +893,8 @@ impl ChatWidget {
             } else {
                 format!("{queued_text}\n{existing_text}")
             };
-            self.bottom_pane.set_composer_text(combined);
+            self.bottom_pane
+                .set_composer_text(combined, Vec::new(), Vec::new());
             // Clear the queue and update the status indicator list.
             self.queued_user_messages.clear();
             self.refresh_queued_user_messages();
@@ -1404,6 +1419,7 @@ impl ChatWidget {
             initial_user_message: create_initial_user_message(
                 initial_prompt.unwrap_or_default(),
                 initial_images,
+                Vec::new(),
             ),
             token_info: None,
             rate_limit_snapshot: None,
@@ -1493,6 +1509,7 @@ impl ChatWidget {
             initial_user_message: create_initial_user_message(
                 initial_prompt.unwrap_or_default(),
                 initial_images,
+                Vec::new(),
             ),
             token_info: None,
             rate_limit_snapshot: None,
@@ -1586,30 +1603,26 @@ impl ChatWidget {
             } if !self.queued_user_messages.is_empty() => {
                 // Prefer the most recently queued item.
                 if let Some(user_message) = self.queued_user_messages.pop_back() {
-                    self.bottom_pane.set_composer_text(user_message.text);
+                    self.bottom_pane.set_composer_text(
+                        user_message.text,
+                        user_message.text_elements,
+                        user_message.local_image_paths,
+                    );
                     self.refresh_queued_user_messages();
                     self.request_redraw();
                 }
             }
             _ => {
                 match self.bottom_pane.handle_key_event(key_event) {
-                    InputResult::Submitted(text) => {
-                        // Enter always sends messages immediately (bypasses queue check)
-                        // Clear any reasoning status header when submitting a new message
-                        self.reasoning_buffer.clear();
-                        self.full_reasoning_buffer.clear();
-                        self.set_status_header(String::from("Working"));
+                    InputResult::Submitted {
+                        text,
+                        text_elements,
+                    } => {
+                        // If a task is running, queue the user input to be sent after the turn completes.
                         let user_message = UserMessage {
                             text,
-                            image_paths: self.bottom_pane.take_recent_submission_images(),
-                        };
-                        self.submit_user_message(user_message);
-                    }
-                    InputResult::Queued(text) => {
-                        // Tab queues the message if a task is running, otherwise submits immediately
-                        let user_message = UserMessage {
-                            text,
-                            image_paths: self.bottom_pane.take_recent_submission_images(),
+                            local_image_paths: self.bottom_pane.take_recent_submission_images(),
+                            text_elements,
                         };
                         self.queue_user_message(user_message);
                     }
@@ -1903,8 +1916,12 @@ impl ChatWidget {
     }
 
     fn submit_user_message(&mut self, user_message: UserMessage) {
-        let UserMessage { text, image_paths } = user_message;
-        if text.is_empty() && image_paths.is_empty() {
+        let UserMessage {
+            text,
+            local_image_paths,
+            text_elements,
+        } = user_message;
+        if text.is_empty() && local_image_paths.is_empty() {
             return;
         }
 
@@ -1928,12 +1945,15 @@ impl ChatWidget {
             return;
         }
 
-        for path in image_paths {
+        for path in local_image_paths {
             items.push(UserInput::LocalImage { path });
         }
 
         if !text.is_empty() {
-            items.push(UserInput::Text { text: text.clone() });
+            items.push(UserInput::Text {
+                text: text.clone(),
+                text_elements: text_elements.clone(),
+            });
         }
 
         if let Some(skills) = self.bottom_pane.skills() {
@@ -1966,7 +1986,7 @@ impl ChatWidget {
 
         // Only show the text portion in conversation history.
         if !text.is_empty() {
-            self.add_to_history(history_cell::new_user_prompt(text));
+            self.add_to_history(history_cell::new_user_prompt(text, text_elements));
         }
         self.needs_final_message_separator = false;
     }
@@ -2166,10 +2186,12 @@ impl ChatWidget {
     }
 
     fn on_user_message_event(&mut self, event: UserMessageEvent) {
-        let message = event.message.trim();
-        // Only show the text portion in conversation history.
-        if !message.is_empty() {
-            self.add_to_history(history_cell::new_user_prompt(message.to_string()));
+        if !event.message.trim().is_empty() {
+            self.add_to_history(history_cell::new_user_prompt(
+                event.message,
+                event.text_elements,
+                event.local_image_paths,
+            ));
         }
 
         self.needs_final_message_separator = false;
@@ -3519,8 +3541,14 @@ impl ChatWidget {
     }
 
     /// Replace the composer content with the provided text and reset cursor.
-    pub(crate) fn set_composer_text(&mut self, text: String) {
-        self.bottom_pane.set_composer_text(text);
+    pub(crate) fn set_composer_text(
+        &mut self,
+        text: String,
+        text_elements: Vec<TextElement>,
+        local_image_paths: Vec<PathBuf>,
+    ) {
+        self.bottom_pane
+            .set_composer_text(text, text_elements, local_image_paths);
     }
 
     pub(crate) fn show_esc_backtrack_hint(&mut self) {

@@ -4,6 +4,8 @@ use crate::protocol::AgentReasoningRawContentEvent;
 use crate::protocol::EventMsg;
 use crate::protocol::UserMessageEvent;
 use crate::protocol::WebSearchEndEvent;
+use crate::user_input::ByteRange;
+use crate::user_input::TextElement;
 use crate::user_input::UserInput;
 use schemars::JsonSchema;
 use serde::Deserialize;
@@ -62,9 +64,12 @@ impl UserMessageItem {
     }
 
     pub fn as_legacy_event(&self) -> EventMsg {
+        // Legacy user-message events flatten only text inputs into `message` and
+        // rebase text element ranges onto that concatenated text.
         EventMsg::UserMessage(UserMessageEvent {
             message: self.message(),
             images: Some(self.image_urls()),
+            text_elements: self.text_elements(),
         })
     }
 
@@ -72,11 +77,35 @@ impl UserMessageItem {
         self.content
             .iter()
             .map(|c| match c {
-                UserInput::Text { text } => text.clone(),
+                UserInput::Text { text, .. } => text.clone(),
                 _ => String::new(),
             })
             .collect::<Vec<String>>()
             .join("")
+    }
+
+    pub fn text_elements(&self) -> Vec<TextElement> {
+        let mut out = Vec::new();
+        let mut offset = 0usize;
+        for input in &self.content {
+            if let UserInput::Text {
+                text,
+                text_elements,
+            } = input
+            {
+                for elem in text_elements {
+                    out.push(TextElement {
+                        byte_range: ByteRange {
+                            start: offset + elem.byte_range.start,
+                            end: offset + elem.byte_range.end,
+                        },
+                        placeholder: elem.placeholder.clone(),
+                    });
+                }
+                offset += text.len();
+            }
+        }
+        out
     }
 
     pub fn image_urls(&self) -> Vec<String> {

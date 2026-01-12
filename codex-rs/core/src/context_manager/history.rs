@@ -135,6 +135,8 @@ impl ContextManager {
                     if matches!(item, ContentItem::InputImage { .. }) {
                         *item = ContentItem::InputText {
                             text: placeholder.to_string(),
+                            // Placeholder text is synthesized; no UI element ranges to preserve.
+                            text_elements: Vec::new(),
                         };
                     }
                 }
@@ -339,7 +341,7 @@ pub(crate) fn is_user_turn_boundary(item: &ResponseItem) -> bool {
 
     for content_item in content {
         match content_item {
-            ContentItem::InputText { text } => {
+            ContentItem::InputText { text, .. } => {
                 if is_session_prefix(text) || is_user_shell_command_text(text) {
                     return false;
                 }

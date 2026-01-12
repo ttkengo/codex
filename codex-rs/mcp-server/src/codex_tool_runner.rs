@@ -122,7 +122,11 @@ pub async fn run_codex_tool_session_reply(
         .insert(request_id.clone(), conversation_id);
     if let Err(e) = conversation
         .submit(Op::UserInput {
-            items: vec![UserInput::Text { text: prompt }],
+            items: vec![UserInput::Text {
+                text: prompt,
+                // MCP tool prompts are plain text with no UI element ranges.
+                text_elements: Vec::new(),
+            }],
             final_output_json_schema: None,
         })
         .await

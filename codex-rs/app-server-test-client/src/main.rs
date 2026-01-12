@@ -256,7 +256,10 @@ fn send_message_v2_with_policies(
     println!("< thread/start response: {thread_response:?}");
     let mut turn_params = TurnStartParams {
         thread_id: thread_response.thread.id.clone(),
-        input: vec![V2UserInput::Text { text: user_message }],
+        input: vec![V2UserInput::Text {
+            text: user_message,
+            text_elements: Vec::new(),
+        }],
         ..Default::default()
     };
     turn_params.approval_policy = approval_policy;
