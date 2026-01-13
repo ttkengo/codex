@@ -35,6 +35,7 @@ use async_channel::Sender;
 use codex_protocol::ThreadId;
 use codex_protocol::approvals::ExecPolicyAmendment;
 use codex_protocol::items::TurnItem;
+use codex_protocol::items::UserMessageItem;
 use codex_protocol::openai_models::ModelInfo;
 use codex_protocol::protocol::FileChange;
 use codex_protocol::protocol::HasLegacyEvent;
@@ -1342,8 +1343,6 @@ impl Session {
             role: "user".to_string(),
             content: vec![ContentItem::InputText {
                 text: format!("Warning: {}", message.into()),
-                // Warning messages are synthesized; no UI element ranges to preserve.
-                text_elements: Vec::new(),
             }],
         };
 
@@ -1517,7 +1516,6 @@ impl Session {
         self.record_conversation_items(turn_context, std::slice::from_ref(&response_item))
             .await;
 
-        // Derive a turn item and emit lifecycle events if applicable.
         if let Some(item) = parse_turn_item(&response_item) {
             self.emit_turn_item_started(turn_context, &item).await;
             self.emit_turn_item_completed(turn_context, item).await;
@@ -2545,9 +2543,19 @@ pub(crate) async fn run_turn(
             .await;
     }
 
+    let user_message_item = UserMessageItem::new(&input);
     let initial_input_for_turn: ResponseInputItem = ResponseInputItem::from(input);
     let response_item: ResponseItem = initial_input_for_turn.clone().into();
-    sess.record_response_item_and_emit_turn_item(turn_context.as_ref(), response_item)
+
+    // Persist the user message to history, but emit the turn item from `UserInput` so
+    // UI-only `text_elements` are preserved. `ResponseItem::Message` does not carry
+    // those spans, and `record_response_item_and_emit_turn_item` would drop them.
+    sess.record_conversation_items(turn_context.as_ref(), &[response_item])
+        .await;
+    let turn_item = TurnItem::UserMessage(user_message_item);
+    sess.emit_turn_item_started(turn_context.as_ref(), &turn_item)
+        .await;
+    sess.emit_turn_item_completed(turn_context.as_ref(), turn_item)
         .await;
 
     if !skill_items.is_empty() {
@@ -3236,7 +3244,6 @@ mod tests {
                 role: "user".to_string(),
                 content: vec![ContentItem::InputText {
                     text: "turn 1 user".to_string(),
-                    text_elements: Vec::new(),
                 }],
             },
             ResponseItem::Message {
@@ -3255,7 +3262,6 @@ mod tests {
                 role: "user".to_string(),
                 content: vec![ContentItem::InputText {
                     text: "turn 2 user".to_string(),
-                    text_elements: Vec::new(),
                 }],
             },
             ResponseItem::Message {
@@ -3294,7 +3300,6 @@ mod tests {
             role: "user".to_string(),
             content: vec![ContentItem::InputText {
                 text: "turn 1 user".to_string(),
-                text_elements: Vec::new(),
             }],
         }];
         sess.record_into_history(&turn_1, tc.as_ref()).await;
@@ -3903,7 +3908,6 @@ mod tests {
                     content,
                     &vec![ContentItem::InputText {
                         text: "Warning: too many unified exec processes".to_string(),
-                        text_elements: Vec::new(),
                     }]
                 );
             }
@@ -3946,6 +3950,7 @@ mod tests {
         let (sess, tc, rx) = make_session_and_context_with_rx().await;
         let input = vec![UserInput::Text {
             text: "hello".to_string(),
+            text_elements: Vec::new(),
         }];
         sess.spawn_task(
             Arc::clone(&tc),
@@ -3975,6 +3980,7 @@ mod tests {
         let (sess, tc, rx) = make_session_and_context_with_rx().await;
         let input = vec![UserInput::Text {
             text: "hello".to_string(),
+            text_elements: Vec::new(),
         }];
         sess.spawn_task(
             Arc::clone(&tc),
@@ -4116,7 +4122,6 @@ mod tests {
             role: "user".to_string(),
             content: vec![ContentItem::InputText {
                 text: "first user".to_string(),
-                text_elements: Vec::new(),
             }],
         };
         live_history.record_items(std::iter::once(&user1), turn_context.truncation_policy);
@@ -4151,7 +4156,6 @@ mod tests {
             role: "user".to_string(),
             content: vec![ContentItem::InputText {
                 text: "second user".to_string(),
-                text_elements: Vec::new(),
             }],
         };
         live_history.record_items(std::iter::once(&user2), turn_context.truncation_policy);
@@ -4186,7 +4190,6 @@ mod tests {
             role: "user".to_string(),
             content: vec![ContentItem::InputText {
                 text: "third user".to_string(),
-                text_elements: Vec::new(),
             }],
         };
         live_history.record_items(std::iter::once(&user3), turn_context.truncation_policy);

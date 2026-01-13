@@ -99,6 +99,7 @@ async fn prompt_tools_are_consistent_across_requests() -> anyhow::Result<()> {
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 1".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -109,6 +110,7 @@ async fn prompt_tools_are_consistent_across_requests() -> anyhow::Result<()> {
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 2".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -170,6 +172,7 @@ async fn codex_mini_latest_tools() -> anyhow::Result<()> {
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 1".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -180,6 +183,7 @@ async fn codex_mini_latest_tools() -> anyhow::Result<()> {
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 2".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -231,6 +235,7 @@ async fn prefixes_context_and_instructions_once_and_consistently_across_requests
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 1".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -241,6 +246,7 @@ async fn prefixes_context_and_instructions_once_and_consistently_across_requests
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 2".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -306,6 +312,7 @@ async fn overrides_turn_context_but_keeps_cached_prefix_and_key_constant() -> an
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 1".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -335,6 +342,7 @@ async fn overrides_turn_context_but_keeps_cached_prefix_and_key_constant() -> an
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 2".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -396,6 +404,7 @@ async fn override_before_first_turn_emits_environment_context() -> anyhow::Resul
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "first message".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -507,6 +516,7 @@ async fn per_turn_overrides_keep_cached_prefix_and_key_constant() -> anyhow::Res
         .submit(Op::UserInput {
             items: vec![UserInput::Text {
                 text: "hello 1".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
         })
@@ -526,6 +536,7 @@ async fn per_turn_overrides_keep_cached_prefix_and_key_constant() -> anyhow::Res
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "hello 2".into(),
+                text_elements: Vec::new(),
             }],
             cwd: new_cwd.path().to_path_buf(),
             approval_policy: AskForApproval::Never,
@@ -617,6 +628,7 @@ async fn send_user_turn_with_no_changes_does_not_send_environment_context() -> a
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "hello 1".into(),
+                text_elements: Vec::new(),
             }],
             cwd: default_cwd.clone(),
             approval_policy: default_approval_policy,
@@ -633,6 +645,7 @@ async fn send_user_turn_with_no_changes_does_not_send_environment_context() -> a
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "hello 2".into(),
+                text_elements: Vec::new(),
             }],
             cwd: default_cwd.clone(),
             approval_policy: default_approval_policy,
@@ -710,6 +723,7 @@ async fn send_user_turn_with_changes_sends_environment_context() -> anyhow::Resu
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "hello 1".into(),
+                text_elements: Vec::new(),
             }],
             cwd: default_cwd.clone(),
             approval_policy: default_approval_policy,
@@ -726,6 +740,7 @@ async fn send_user_turn_with_changes_sends_environment_context() -> anyhow::Resu
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "hello 2".into(),
+                text_elements: Vec::new(),
             }],
             cwd: default_cwd.clone(),
             approval_policy: AskForApproval::Never,

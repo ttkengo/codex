@@ -57,6 +57,7 @@ async fn thread_rollback_drops_last_turns_and_persists_to_rollout() -> Result<()
             thread_id: thread.id.clone(),
             input: vec![V2UserInput::Text {
                 text: first_text.to_string(),
+                text_elements: Vec::new(),
             }],
             ..Default::default()
         })
@@ -77,6 +78,7 @@ async fn thread_rollback_drops_last_turns_and_persists_to_rollout() -> Result<()
             thread_id: thread.id.clone(),
             input: vec![V2UserInput::Text {
                 text: "Second".to_string(),
+                text_elements: Vec::new(),
             }],
             ..Default::default()
         })
@@ -116,6 +118,7 @@ async fn thread_rollback_drops_last_turns_and_persists_to_rollout() -> Result<()
                 content,
                 &vec![V2UserInput::Text {
                     text: first_text.to_string()
+                    text_elements: Vec::new(),
                 }]
             );
         }
@@ -144,6 +147,7 @@ async fn thread_rollback_drops_last_turns_and_persists_to_rollout() -> Result<()
                 content,
                 &vec![V2UserInput::Text {
                     text: first_text.to_string()
+                    text_elements: Vec::new(),
                 }]
             );
         }

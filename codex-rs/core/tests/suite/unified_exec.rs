@@ -199,6 +199,7 @@ async fn unified_exec_intercepts_apply_patch_exec_command() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "apply patch via unified exec".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd,
@@ -325,6 +326,7 @@ async fn unified_exec_emits_exec_command_begin_event() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "emit begin event".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -400,6 +402,7 @@ async fn unified_exec_resolves_relative_workdir() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "run relative workdir test".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -478,6 +481,7 @@ async fn unified_exec_respects_workdir_override() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "run workdir test".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -568,6 +572,7 @@ async fn unified_exec_emits_exec_command_end_event() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "emit end event".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -640,6 +645,7 @@ async fn unified_exec_emits_output_delta_for_exec_command() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "emit delta".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -713,6 +719,7 @@ async fn unified_exec_full_lifecycle_with_background_end_event() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "exercise full unified exec lifecycle".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -839,6 +846,7 @@ async fn unified_exec_emits_terminal_interaction_for_write_stdin() -> Result<()>
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "stdin delta".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -972,6 +980,7 @@ async fn unified_exec_terminal_interaction_captures_delayed_output() -> Result<(
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "delayed terminal interaction output".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -1129,6 +1138,7 @@ async fn unified_exec_emits_one_begin_and_one_end_event() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "check poll event behavior".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -1224,6 +1234,7 @@ async fn exec_command_reports_chunk_and_exit_metadata() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "run metadata test".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -1330,6 +1341,7 @@ async fn unified_exec_respects_early_exit_notifications() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "watch early exit timing".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -1457,6 +1469,7 @@ async fn write_stdin_returns_exit_metadata_and_clears_session() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "test write_stdin exit behavior".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -1621,6 +1634,7 @@ async fn unified_exec_emits_end_event_when_session_dies_via_stdin() -> Result<()
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "end on exit".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -1695,6 +1709,7 @@ async fn unified_exec_closes_long_running_session_at_turn_end() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "close unified exec processes on turn end".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -1813,6 +1828,7 @@ async fn unified_exec_reuses_session_via_stdin() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "run unified exec".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -1944,6 +1960,7 @@ PY
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "exercise lag handling".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -2055,6 +2072,7 @@ async fn unified_exec_timeout_and_followup_poll() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "check timeout".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -2148,6 +2166,7 @@ PY
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "summarize large output".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -2226,6 +2245,7 @@ async fn unified_exec_runs_under_sandbox() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "summarize large output".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -2327,6 +2347,7 @@ async fn unified_exec_python_prompt_under_seatbelt() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "start python under seatbelt".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -2419,6 +2440,7 @@ async fn unified_exec_runs_on_all_platforms() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "summarize large output".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),
@@ -2549,6 +2571,7 @@ async fn unified_exec_prunes_exited_sessions_first() -> Result<()> {
         .submit(Op::UserTurn {
             items: vec![UserInput::Text {
                 text: "fill session cache".into(),
+                text_elements: Vec::new(),
             }],
             final_output_json_schema: None,
             cwd: cwd.path().to_path_buf(),

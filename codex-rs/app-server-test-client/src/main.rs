@@ -291,6 +291,7 @@ fn send_follow_up_v2(
         thread_id: thread_response.thread.id.clone(),
         input: vec![V2UserInput::Text {
             text: first_message,
+            text_elements: Vec::new(),
         }],
         ..Default::default()
     };
@@ -302,6 +303,7 @@ fn send_follow_up_v2(
         thread_id: thread_response.thread.id.clone(),
         input: vec![V2UserInput::Text {
             text: follow_up_message,
+            text_elements: Vec::new(),
         }],
         ..Default::default()
     };
