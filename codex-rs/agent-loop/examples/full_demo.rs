@@ -205,11 +205,8 @@ async fn run_demo_3(agent: &SimpleAgent) -> Result<()> {
         event_count += 1;
 
         match event.msg {
-            EventMsg::AgentMessageContentDelta(delta) => {
-                print!("{}", delta.delta);
-                std::io::stdout().flush()?;
-                message_buffer.push_str(&delta.delta);
-            }
+            // Note: AgentMessageContentDelta is converted to AgentMessageDelta as a legacy event.
+            // Handling both would double-print the streamed text.
             EventMsg::AgentMessageDelta(delta) => {
                 print!("{}", delta.delta);
                 std::io::stdout().flush()?;
