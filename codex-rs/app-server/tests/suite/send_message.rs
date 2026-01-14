@@ -101,6 +101,7 @@ async fn send_message(
             conversation_id,
             items: vec![InputItem::Text {
                 text: message.to_string(),
+                text_elements: Vec::new(),
             }],
         })
         .await?;
@@ -194,6 +195,7 @@ async fn test_send_message_raw_notifications_opt_in() -> Result<()> {
             conversation_id,
             items: vec![InputItem::Text {
                 text: "Hello".to_string(),
+                text_elements: Vec::new(),
             }],
         })
         .await?;
@@ -245,6 +247,7 @@ async fn test_send_message_session_not_found() -> Result<()> {
             conversation_id: unknown,
             items: vec![InputItem::Text {
                 text: "ping".to_string(),
+                text_elements: Vec::new(),
             }],
         })
         .await?;
