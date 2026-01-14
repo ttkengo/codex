@@ -1270,6 +1270,10 @@ pub struct SkillInterface {
     pub icon_small: Option<PathBuf>,
     #[ts(optional)]
     pub icon_large: Option<PathBuf>,
+    #[ts(optional)]
+    pub brand_color: Option<String>,
+    #[ts(optional)]
+    pub default_prompt: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, JsonSchema, TS)]
@@ -1307,6 +1311,8 @@ impl From<CoreSkillInterface> for SkillInterface {
         Self {
             display_name: value.display_name,
             short_description: value.short_description,
+            brand_color: value.brand_color,
+            default_prompt: value.default_prompt,
             icon_small: value.icon_small,
             icon_large: value.icon_large,
         }

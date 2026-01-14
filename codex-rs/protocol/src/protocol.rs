@@ -1825,6 +1825,10 @@ pub struct SkillInterface {
     pub icon_small: Option<PathBuf>,
     #[ts(optional)]
     pub icon_large: Option<PathBuf>,
+    #[ts(optional)]
+    pub brand_color: Option<String>,
+    #[ts(optional)]
+    pub default_prompt: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, TS)]
