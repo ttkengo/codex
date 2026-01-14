@@ -1110,8 +1110,16 @@ pub struct AgentMessageEvent {
 #[derive(Debug, Clone, Deserialize, Serialize, JsonSchema, TS)]
 pub struct UserMessageEvent {
     pub message: String,
+    /// Image URLs sourced from `UserInput::Image`. These are safe
+    /// to replay in legacy UI history events and correspond to images sent to
+    /// the model.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub images: Option<Vec<String>>,
+    /// Local file paths sourced from `UserInput::LocalImage`. These are kept so
+    /// the UI can reattach images when editing history, and should not be sent
+    /// to the model or treated as API-ready URLs.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub local_images: Vec<std::path::PathBuf>,
     /// UI-defined spans within `message` used to render or persist special elements.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub text_elements: Vec<crate::user_input::TextElement>,

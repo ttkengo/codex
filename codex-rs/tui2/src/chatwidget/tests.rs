@@ -131,6 +131,7 @@ async fn resumed_initial_messages_render_history() {
             EventMsg::UserMessage(UserMessageEvent {
                 message: "hello from user".to_string(),
                 images: None,
+                local_images: Vec::new(),
                 text_elements: Vec::new(),
             }),
             EventMsg::AgentMessage(AgentMessageEvent {
@@ -1042,7 +1043,7 @@ async fn streaming_final_answer_keeps_task_running_state() {
 
     chat.bottom_pane
         .set_composer_text("queued submission".to_string(), Vec::new(), Vec::new());
-    chat.handle_key_event(KeyEvent::new(KeyCode::Tab, KeyModifiers::NONE));
+    chat.handle_key_event(KeyEvent::new(KeyCode::Enter, KeyModifiers::NONE));
 
     assert_eq!(chat.queued_user_messages.len(), 1);
     assert_eq!(
@@ -3331,8 +3332,11 @@ async fn chatwidget_exec_and_status_layout_vt100_snapshot() {
             delta: "**Investigating rendering code**".into(),
         }),
     });
-    chat.bottom_pane
-        .set_composer_text("Summarize recent commits".to_string(), Vec::new(), Vec::new());
+    chat.bottom_pane.set_composer_text(
+        "Summarize recent commits".to_string(),
+        Vec::new(),
+        Vec::new(),
+    );
 
     let width: u16 = 80;
     let ui_height: u16 = chat.desired_height(width);

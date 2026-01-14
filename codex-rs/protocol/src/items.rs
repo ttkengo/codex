@@ -69,6 +69,7 @@ impl UserMessageItem {
         EventMsg::UserMessage(UserMessageEvent {
             message: self.message(),
             images: Some(self.image_urls()),
+            local_images: self.local_image_paths(),
             text_elements: self.text_elements(),
         })
     }
@@ -113,6 +114,16 @@ impl UserMessageItem {
             .iter()
             .filter_map(|c| match c {
                 UserInput::Image { image_url } => Some(image_url.clone()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    pub fn local_image_paths(&self) -> Vec<std::path::PathBuf> {
+        self.content
+            .iter()
+            .filter_map(|c| match c {
+                UserInput::LocalImage { path } => Some(path.clone()),
                 _ => None,
             })
             .collect()
