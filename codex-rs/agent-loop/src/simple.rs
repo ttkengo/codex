@@ -213,11 +213,17 @@ impl SimpleAgent {
         // Collect responses until turn completion
         let mut response_text = String::new();
         let mut last_message = None;
+        let mut content_delta_seen = false;
 
         loop {
             let event = self.thread.next_event().await?;
             if self
-                .handle_event(event, Some(&mut response_text), &mut last_message)
+                .handle_event(
+                    event,
+                    Some(&mut response_text),
+                    &mut last_message,
+                    &mut content_delta_seen,
+                )
                 .await?
             {
                 break;
@@ -230,9 +236,13 @@ impl SimpleAgent {
     /// Wait for the current task to complete and return when done.
     pub async fn wait_for_completion(&self) -> Result<()> {
         let mut last_message = None;
+        let mut content_delta_seen = false;
         loop {
             let event = self.thread.next_event().await?;
-            if self.handle_event(event, None, &mut last_message).await? {
+            if self
+                .handle_event(event, None, &mut last_message, &mut content_delta_seen)
+                .await?
+            {
                 return Ok(());
             }
         }
@@ -273,6 +283,7 @@ impl SimpleAgent {
         event: codex_protocol::protocol::Event,
         mut response_text: Option<&mut String>,
         last_message: &mut Option<String>,
+        content_delta_seen: &mut bool,
     ) -> Result<bool> {
         let event_id = event.id;
         match event.msg {
@@ -280,6 +291,7 @@ impl SimpleAgent {
                 if let Some(text) = response_text.as_deref_mut() {
                     text.push_str(&delta.delta);
                 }
+                *content_delta_seen = true;
                 debug!(
                     event_id = %event_id,
                     delta_len = delta.delta.len(),
@@ -287,12 +299,13 @@ impl SimpleAgent {
                 );
             }
             EventMsg::AgentMessageDelta(delta) => {
-                if let Some(text) = response_text.as_deref_mut() {
+                if !*content_delta_seen && let Some(text) = response_text.as_deref_mut() {
                     text.push_str(&delta.delta);
                 }
                 debug!(
                     event_id = %event_id,
                     delta_len = delta.delta.len(),
+                    skipped = *content_delta_seen,
                     "Agent message delta"
                 );
             }
