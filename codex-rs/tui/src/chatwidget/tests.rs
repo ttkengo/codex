@@ -69,6 +69,7 @@ use codex_utils_absolute_path::AbsolutePathBuf;
 use crossterm::event::KeyCode;
 use crossterm::event::KeyEvent;
 use crossterm::event::KeyModifiers;
+use indoc::indoc;
 use insta::assert_snapshot;
 use pretty_assertions::assert_eq;
 #[cfg(target_os = "windows")]
@@ -3811,27 +3812,28 @@ async fn chatwidget_markdown_code_blocks_vt100_snapshot() {
     term.set_viewport_area(Rect::new(0, height - 1, width, 1));
 
     // Simulate streaming via AgentMessageDelta in 2-character chunks (no final AgentMessage).
-    let source: &str = r#"
+    let source: &str = indoc! {r#"
 
-    -- Indented code block (4 spaces)
-    SELECT *
-    FROM "users"
-    WHERE "email" LIKE '%@example.com';
 
-````markdown
-```sh
-printf 'fenced within fenced\n'
-```
-````
+        -- Indented code block (4 spaces)
+        SELECT *
+        FROM "users"
+        WHERE "email" LIKE '%@example.com';
 
-```jsonc
-{
-  // comment allowed in jsonc
-  "path": "C:\\Program Files\\App",
-  "regex": "^foo.*(bar)?$"
-}
-```
-"#;
+    ````markdown
+    ```sh
+    printf 'fenced within fenced\n'
+    ```
+    ````
+
+    ```jsonc
+    {
+      // comment allowed in jsonc
+      "path": "C:\\Program Files\\App",
+      "regex": "^foo.*(bar)?$"
+    }
+    ```
+    "#};
 
     let mut it = source.chars();
     loop {
