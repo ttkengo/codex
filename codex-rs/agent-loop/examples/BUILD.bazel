@@ -1,0 +1,19 @@
+load("@crates//:defs.bzl", "all_crate_deps")
+load("@rules_rust//rust:defs.bzl", "rust_binary")
+
+rust_binary(
+    name = "full_demo",
+    crate_name = "full_demo",
+    crate_root = "full_demo.rs",
+    srcs = ["full_demo.rs"],
+    deps = ["//codex-rs/agent-loop:agent-loop"] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+        package_name = "codex-rs/agent-loop",
+    ),
+    proc_macro_deps = all_crate_deps(
+        proc_macro = True,
+        package_name = "codex-rs/agent-loop",
+    ),
+    visibility = ["//visibility:public"],
+)

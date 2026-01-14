@@ -9,6 +9,7 @@ members = [
     "debug-client",
     "apply-patch",
     "arg0",
+    "agent-loop",
     "feedback",
     "codex-backend-openapi-models",
     "cloud-tasks",
@@ -62,6 +63,7 @@ license = "Apache-2.0"
 [workspace.dependencies]
 # Internal
 app_test_support = { path = "app-server/tests/common" }
+codex-agent-loop = { path = "agent-loop" }
 codex-ansi-escape = { path = "ansi-escape" }
 codex-api = { path = "codex-api" }
 codex-app-server = { path = "app-server" }
