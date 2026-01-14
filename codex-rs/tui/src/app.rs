@@ -349,7 +349,7 @@ pub(crate) struct App {
 }
 
 impl App {
-    pub fn chatwidget_init_from_existing_thread(
+    pub fn chatwidget_init_for_forked_or_resumed_thread(
         &self,
         tui: &mut tui::Tui,
         cfg: codex_core::config::Config,
@@ -702,8 +702,10 @@ impl App {
                         {
                             Ok(resumed) => {
                                 self.shutdown_current_thread().await;
-                                let init = self
-                                    .chatwidget_init_from_existing_thread(tui, self.config.clone());
+                                let init = self.chatwidget_init_for_forked_or_resumed_thread(
+                                    tui,
+                                    self.config.clone(),
+                                );
                                 self.chat_widget = ChatWidget::new_from_existing(
                                     init,
                                     resumed.thread,
@@ -760,8 +762,10 @@ impl App {
                         {
                             Ok(forked) => {
                                 self.shutdown_current_thread().await;
-                                let init = self
-                                    .chatwidget_init_from_existing_thread(tui, self.config.clone());
+                                let init = self.chatwidget_init_for_forked_or_resumed_thread(
+                                    tui,
+                                    self.config.clone(),
+                                );
                                 self.chat_widget = ChatWidget::new_from_existing(
                                     init,
                                     forked.thread,
