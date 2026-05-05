@@ -173,6 +173,10 @@ impl Approvable<ApplyPatchRequest> for ApplyPatchRuntime {
         Some(req.exec_approval_requirement.clone())
     }
 
+    fn skip_requirement_counts_as_approval(&self, _req: &ApplyPatchRequest) -> bool {
+        true
+    }
+
     fn permission_request_payload(
         &self,
         req: &ApplyPatchRequest,

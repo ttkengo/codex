@@ -141,7 +141,7 @@ impl ToolOrchestrator {
         let use_guardian = routes_approval_to_guardian(turn_ctx) || strict_auto_review;
 
         // 1) Approval
-        let mut already_approved = false;
+        let already_approved;
 
         let file_system_sandbox_policy = turn_ctx.file_system_sandbox_policy();
         let network_sandbox_policy = turn_ctx.network_sandbox_policy();
@@ -174,6 +174,7 @@ impl ToolOrchestrator {
                         .await?;
                     already_approved = true;
                 } else {
+                    already_approved = tool.skip_requirement_counts_as_approval(req);
                     otel.tool_decision(
                         otel_tn,
                         otel_ci,

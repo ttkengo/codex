@@ -309,6 +309,12 @@ pub(crate) trait Approvable<Req> {
         None
     }
 
+    /// Whether an `ExecApprovalRequirement::Skip` result should count as an
+    /// approval for later retry decisions in the same tool call.
+    fn skip_requirement_counts_as_approval(&self, _req: &Req) -> bool {
+        false
+    }
+
     /// Return hook input for approval-time policy hooks when this runtime wants
     /// hook evaluation to run before guardian or user approval.
     fn permission_request_payload(&self, _req: &Req) -> Option<PermissionRequestPayload> {

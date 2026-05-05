@@ -994,6 +994,132 @@ async fn danger_full_access_tool_attempts_do_not_enforce_managed_network() -> an
 }
 
 #[tokio::test]
+async fn config_approved_tool_retry_does_not_request_second_approval() -> anyhow::Result<()> {
+    use std::sync::atomic::AtomicUsize;
+    use std::sync::atomic::Ordering;
+
+    #[derive(Default)]
+    struct ConfigApprovedRetryRuntime {
+        attempts: Arc<AtomicUsize>,
+        approvals: Arc<AtomicUsize>,
+    }
+
+    impl crate::tools::sandboxing::Approvable<()> for ConfigApprovedRetryRuntime {
+        type ApprovalKey = String;
+
+        fn approval_keys(&self, _req: &()) -> Vec<Self::ApprovalKey> {
+            vec!["probe".to_string()]
+        }
+
+        fn exec_approval_requirement(
+            &self,
+            _req: &(),
+        ) -> Option<crate::tools::sandboxing::ExecApprovalRequirement> {
+            Some(crate::tools::sandboxing::ExecApprovalRequirement::Skip {
+                bypass_sandbox: false,
+                proposed_execpolicy_amendment: None,
+            })
+        }
+
+        fn skip_requirement_counts_as_approval(&self, _req: &()) -> bool {
+            true
+        }
+
+        fn wants_no_sandbox_approval(&self, _policy: AskForApproval) -> bool {
+            true
+        }
+
+        fn start_approval_async<'a>(
+            &'a mut self,
+            _req: &'a (),
+            _ctx: crate::tools::sandboxing::ApprovalCtx<'a>,
+        ) -> futures::future::BoxFuture<'a, ReviewDecision> {
+            self.approvals.fetch_add(1, Ordering::SeqCst);
+            Box::pin(async { ReviewDecision::Approved })
+        }
+    }
+
+    impl crate::tools::sandboxing::Sandboxable for ConfigApprovedRetryRuntime {
+        fn sandbox_preference(&self) -> codex_sandboxing::SandboxablePreference {
+            codex_sandboxing::SandboxablePreference::Auto
+        }
+    }
+
+    impl crate::tools::sandboxing::ToolRuntime<(), ()> for ConfigApprovedRetryRuntime {
+        async fn run(
+            &mut self,
+            _req: &(),
+            _attempt: &crate::tools::sandboxing::SandboxAttempt<'_>,
+            _ctx: &crate::tools::sandboxing::ToolCtx,
+        ) -> Result<(), crate::tools::sandboxing::ToolError> {
+            if self.attempts.fetch_add(1, Ordering::SeqCst) == 0 {
+                let output = ExecToolCallOutput {
+                    exit_code: 1,
+                    stdout: codex_protocol::exec_output::StreamOutput::new(String::new()),
+                    stderr: codex_protocol::exec_output::StreamOutput::new(
+                        "sandbox denied".to_string(),
+                    ),
+                    aggregated_output: codex_protocol::exec_output::StreamOutput::new(
+                        "sandbox denied".to_string(),
+                    ),
+                    duration: Duration::ZERO,
+                    timed_out: false,
+                };
+                return Err(crate::tools::sandboxing::ToolError::Codex(
+                    codex_protocol::error::CodexErr::Sandbox(
+                        codex_protocol::error::SandboxErr::Denied {
+                            output: Box::new(output),
+                            network_policy_decision: None,
+                        },
+                    ),
+                ));
+            }
+            Ok(())
+        }
+    }
+
+    let session = make_session_with_config(|config| {
+        config.permissions.approval_policy =
+            codex_config::Constrained::allow_any(AskForApproval::OnRequest);
+        config
+            .permissions
+            .set_permission_profile(PermissionProfile::workspace_write())
+            .expect("test setup should allow permission profile");
+    })
+    .await?;
+    let turn = session.new_default_turn().await;
+    let attempts = Arc::new(AtomicUsize::new(0));
+    let approvals = Arc::new(AtomicUsize::new(0));
+    let mut runtime = ConfigApprovedRetryRuntime {
+        attempts: Arc::clone(&attempts),
+        approvals: Arc::clone(&approvals),
+    };
+    let mut orchestrator = crate::tools::orchestrator::ToolOrchestrator::new();
+    let tool_ctx = crate::tools::sandboxing::ToolCtx {
+        session: Arc::clone(&session),
+        turn: Arc::clone(&turn),
+        call_id: "probe-call".to_string(),
+        tool_name: "probe".to_string(),
+    };
+
+    orchestrator
+        .run(
+            &mut runtime,
+            &(),
+            &tool_ctx,
+            turn.as_ref(),
+            AskForApproval::OnRequest,
+        )
+        .await
+        .expect("retry should succeed without a second approval");
+
+    assert_eq!(attempts.load(Ordering::SeqCst), 2);
+    assert_eq!(approvals.load(Ordering::SeqCst), 0);
+
+    Ok(())
+}
+
+#[tokio::test]
 async fn workspace_write_turns_continue_to_expose_managed_network_proxy() -> anyhow::Result<()> {
     let sandbox_policy = SandboxPolicy::new_workspace_write_policy();
     let network_spec = crate::config::NetworkProxySpec::from_config_and_constraints(
