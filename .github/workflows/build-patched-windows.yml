@@ -30,7 +30,7 @@ jobs:
 
       - name: Build codex.exe
         working-directory: codex-rs
-        run: cargo build --release --locked --bin codex
+        run: cargo build --release --bin codex
 
       - name: Upload patched binary
         uses: actions/upload-artifact@v4
