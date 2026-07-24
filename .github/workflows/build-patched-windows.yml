@@ -13,12 +13,15 @@ jobs:
       - name: Check out Codex 0.145.0
         uses: actions/checkout@v4
         with:
+          repository: openai/codex
           ref: rust-v0.145.0
           fetch-depth: 0
 
       - name: Apply duplicate-approval fix
         shell: pwsh
-        run: git cherry-pick 5ebb6d0de103f628854cc0cce3b5892d4ae0dfb8
+        run: |
+          git fetch https://github.com/ttkengo/codex.git fix/apply-patch-retry-approval
+          git cherry-pick 5ebb6d0de103f628854cc0cce3b5892d4ae0dfb8
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
