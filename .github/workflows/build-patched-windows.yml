@@ -1,14 +1,16 @@
-name: Build patched Codex for Windows
+name: Build complete patched Codex for Windows
 
 on:
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  build-windows:
+  build-windows-bundle:
     runs-on: windows-latest
+    timeout-minutes: 90
     steps:
       - name: Check out Codex 0.145.0
         uses: actions/checkout@v4
@@ -28,13 +30,38 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Build codex.exe
-        working-directory: codex-rs
-        run: cargo build --release --bin codex
+      - name: Restore Rust build cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: codex-rs
+          cache-on-failure: true
 
-      - name: Upload patched binary
-        uses: actions/upload-artifact@v4
+      - name: Download previously built patched codex.exe
+        uses: actions/download-artifact@v4
         with:
           name: codex-0.145.0-apply-patch-fix-windows-x64
-          path: codex-rs/target/release/codex.exe
+          path: bundle
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ttkengo/codex
+          run-id: 30106558709
+
+      - name: Build matching Windows sandbox helpers
+        working-directory: codex-rs
+        shell: pwsh
+        env:
+          LIBSQLITE3_FLAGS: SQLITE_DISABLE_INTRINSIC
+        run: cargo build --release --bin codex-windows-sandbox-setup --bin codex-command-runner
+
+      - name: Assemble complete bundle
+        shell: pwsh
+        run: |
+          Copy-Item codex-rs/target/release/codex-windows-sandbox-setup.exe bundle/ -Force
+          Copy-Item codex-rs/target/release/codex-command-runner.exe bundle/ -Force
+          Get-ChildItem bundle
+
+      - name: Upload complete patched bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: codex-0.145.0-apply-patch-fix-windows-complete
+          path: bundle/*
           if-no-files-found: error
